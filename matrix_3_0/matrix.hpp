@@ -9,6 +9,23 @@
 #include <cassert>
 
 
+struct matrix_size_type {
+	constexpr matrix_size_type() = default;
+	explicit constexpr matrix_size_type(std::size_t rows, std::size_t cols) : rows{ rows }, cols{ cols } {}
+
+	constexpr bool operator<(matrix_size_type other) const noexcept { return rows * cols < other.rows * other.cols; }
+	constexpr bool operator>=(matrix_size_type other) const noexcept { return !(*this < other); }
+
+	constexpr bool operator>(matrix_size_type other) const noexcept { return (other < *this); }
+	constexpr bool operator<=(matrix_size_type other) const noexcept { return !(*this > other); }
+
+	constexpr bool operator==(matrix_size_type other) const noexcept { return !(*this < other || *this > other); }
+	constexpr bool operator!=(matrix_size_type other) const noexcept { return !(*this == other); }
+
+	std::size_t rows = 0;
+	std::size_t cols = 0;
+};
+
 template<class T, class Allocator = std::allocator<T>>
 class matrix {
 public:
@@ -20,23 +37,6 @@ public:
 	using const_reference = const T&;
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
-
-	struct matrix_size_type {
-		constexpr matrix_size_type() = default;
-		explicit constexpr matrix_size_type(size_type rows, size_type cols) : rows{ rows }, cols{ cols } {}
-
-		constexpr bool operator<(matrix_size_type other) const noexcept { return rows * cols < other.rows * other.cols; }
-		constexpr bool operator>=(matrix_size_type other) const noexcept { return !(*this < other); }
-
-		constexpr bool operator>(matrix_size_type other) const noexcept { return !(other < *this); }
-		constexpr bool operator<=(matrix_size_type other) const noexcept { return !(*this > other); }
-
-		constexpr bool operator==(matrix_size_type other) const noexcept { return !(*this < other || *this > other); }
-		constexpr bool operator!=(matrix_size_type other) const noexcept { return !(*this == other); }
-
-		size_type rows = 0;
-		size_type cols = 0;
-	};
 
 	static_assert(std::is_same_v<T, typename Allocator::value_type>, "allocator must allocate type T");
 
@@ -194,6 +194,12 @@ private:
 	}
 	void destroy_and_deallocate_elems(size_type countRows, size_type countCols, size_type currRow, size_type currCol)
 	{
+		if (elems_ == nullptr) {
+			assert(sz_ == matrix_size_type{});
+			assert(space_ == matrix_size_type{});
+			return;
+		}
+
 		// destructing all before current row
 		for (size_type row = 0; row < currRow; ++row) {
 			for (size_type col = 0; col < countCols; ++col) {

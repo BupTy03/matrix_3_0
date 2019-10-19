@@ -113,7 +113,6 @@ public:
 		std::swap(sz_, other.sz_);
 		std::swap(space_, other.space_);
 		std::swap(elems_, other.elems_);
-		std::swap(alloc_, other.alloc_);
 	}
 
 	void clear() { destroy_and_deallocate_elems(space_.rows, space_.cols, sz_.rows - 1, sz_.cols); }

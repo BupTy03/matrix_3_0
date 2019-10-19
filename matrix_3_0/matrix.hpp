@@ -43,8 +43,7 @@ public:
 	explicit matrix() = default;
 	explicit matrix(size_type rows, size_type cols, const T& value) { construct_with_value(rows, cols, value); }
 	explicit matrix(size_type rows, size_type cols) { construct_with_value(rows, cols, T()); }
-	explicit matrix(size_type cols, std::initializer_list<T> initList) 
-		: matrix(cols, initList.begin(), initList.end()) {}
+	explicit matrix(size_type cols, std::initializer_list<T> initList) : matrix(cols, initList.begin(), initList.end()) {}
 
 	template<class It, typename = std::enable_if_t<std::is_same_v<
 		typename std::iterator_traits<It>::iterator_category, 
@@ -70,16 +69,31 @@ public:
 
 	~matrix() { clear(); }
 
-	explicit matrix(const matrix& other) { copy_of(other.elems_, other.sz_.rows, other.sz_.cols); }
-	matrix& operator=(const matrix& other){ matrix tmp(other); this->swap(tmp); }
+	matrix(const matrix& other) 
+	{
+		if (other.empty()) 
+			return;
 
-	explicit matrix(matrix&& other) noexcept { this->swap(other); }
+		assign_elems(other.sz_.rows, other.sz_.cols, other.elems_);
+	}
+	matrix& operator=(const matrix& other)
+	{ 
+		if (this == &other)
+			return *this;
+
+		matrix tmp(other);
+		this->swap(tmp);
+		return *this;
+	}
+
+	matrix(matrix&& other) noexcept { this->swap(other); }
 	matrix& operator=(matrix&& other) noexcept 
 	{
 		if (this == &other)
-			return;
+			return *this;
 
 		this->swap(other);
+		return *this;
 	}
 
 	T** data() { return elems_; }

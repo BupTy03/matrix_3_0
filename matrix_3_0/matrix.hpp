@@ -9,23 +9,6 @@
 #include <cassert>
 
 
-struct matrix_size_type {
-	constexpr matrix_size_type() = default;
-	explicit constexpr matrix_size_type(std::size_t rows, std::size_t cols) : rows{ rows }, cols{ cols } {}
-
-	constexpr bool operator<(matrix_size_type other) const noexcept { return rows * cols < other.rows * other.cols; }
-	constexpr bool operator>=(matrix_size_type other) const noexcept { return !(*this < other); }
-
-	constexpr bool operator>(matrix_size_type other) const noexcept { return (other < *this); }
-	constexpr bool operator<=(matrix_size_type other) const noexcept { return !(*this > other); }
-
-	constexpr bool operator==(matrix_size_type other) const noexcept { return !(*this < other || *this > other); }
-	constexpr bool operator!=(matrix_size_type other) const noexcept { return !(*this == other); }
-
-	std::size_t rows = 0;
-	std::size_t cols = 0;
-};
-
 namespace impl {
 	namespace internal_ns {
 
@@ -179,7 +162,7 @@ namespace impl {
 		void destroy_by_ptr(T* ptr) noexcept { assert(ptr != nullptr); ptr->~T(); }
 
 		template<typename Iter, std::enable_if_t<std::is_class_v<typename std::iterator_traits<Iter>::value_type>>>
-		void destroy_n_elems(Iter first, std::size_t n) {
+		void destroy_n_elems(Iter first, std::size_t n) noexcept {
 			for (std::size_t index = 0; index < n; ++index, ++first)
 				destroy_by_ptr(std::addressof(*first));
 		}
@@ -477,6 +460,23 @@ namespace impl {
 	}
 
 }
+
+struct matrix_size_type {
+	constexpr matrix_size_type() = default;
+	explicit constexpr matrix_size_type(std::size_t rows, std::size_t cols) : rows{ rows }, cols{ cols } {}
+
+	constexpr bool operator<(matrix_size_type other) const noexcept { return rows * cols < other.rows * other.cols; }
+	constexpr bool operator>=(matrix_size_type other) const noexcept { return !(*this < other); }
+
+	constexpr bool operator>(matrix_size_type other) const noexcept { return (other < *this); }
+	constexpr bool operator<=(matrix_size_type other) const noexcept { return !(*this > other); }
+
+	constexpr bool operator==(matrix_size_type other) const noexcept { return !(*this < other || *this > other); }
+	constexpr bool operator!=(matrix_size_type other) const noexcept { return !(*this == other); }
+
+	std::size_t rows = 0;
+	std::size_t cols = 0;
+};
 
 template<class T, class Allocator = std::allocator<T>>
 class matrix {
